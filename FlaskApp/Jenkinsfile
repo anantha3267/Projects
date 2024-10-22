@@ -37,7 +37,7 @@ pipeline {
         stage('Update K8S manifest & push to Repo') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: '4f7a06f4-3a7a-45e6-9e6c-5ac270d7c79a', variable: 'gittoken')]) {
+                    withCredentials([string(credentialsId: 'github-pat-token-id', variable: 'gittoken')]) {
                         sh '''
                         echo 'Current contents of deploy.yaml:'
                         cat FlaskApp/deploy.yaml
