@@ -20,8 +20,8 @@ pipeline {
                         docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
                         # Change to the django folder before building the Docker image
                         cd FlaskApp
-                        docker build -t anantha3267/flaskApp:${IMAGE_TAG} .
-                        docker push anantha3267/flaskApp:${IMAGE_TAG}
+                        docker build -t anantha3267/flaskapp:${IMAGE_TAG} .
+                        docker push anantha3267/flaskapp:${IMAGE_TAG}
                         '''
                     }
                 }
