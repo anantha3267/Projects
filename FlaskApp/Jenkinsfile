@@ -39,6 +39,8 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: '4f7a06f4-3a7a-45e6-9e6c-5ac270d7c79a', variable: 'gittoken')]) {
                         sh '''
+                        echo 'Current contents of deploy.yaml:'
+                        cat FlaskApp/deploy.yaml
                         echo 'Updating K8S manifest'
                         # Update the K8S manifest in the django directory
                         sed -i "s|image: anantha3267/flaskapp:.*|image: anantha3267/flaskapp:${IMAGE_TAG}|g" FlaskApp/deploy.yaml
