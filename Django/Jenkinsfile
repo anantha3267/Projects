@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+    environment {
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        DOCKER_IMAGE = "anantha3267/todoapp:${IMAGE_TAG}"
+    }
+
+    stages {
+        stage('Checkout App Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/anantha3267/Python.git'
+            }
+        }
+        
+        stage('Build and Push Docker') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'd0a1f0d1-d988-4519-9391-886b74bbb920', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh '''
+                        echo 'Building and pushing Docker image'
+                        docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+                        # Change to the django folder before building the Docker image
+                        cd Django
+                        docker build -t ${DOCKER_IMAGE} .
+                        docker push ${DOCKER_IMAGE}
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Checkout K8S Manifest') {
+            steps {
+                git branch: 'main', url: 'https://github.com/nikhil95malempati/k8s-cicd-yaml.git'
+            }
+        }
+
+        stage('Update K8S manifest & push to Repo') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'github-pat-token-id', variable: 'gittoken')]) {
+                        sh '''
+                        echo 'Current contents of deploy.yaml:'
+                        cat Django/deploy.yaml
+                        echo 'Updating K8S manifest'
+                        # Update the K8S manifest in the django directory
+                        sed -i "s|image: anantha3267/django:.*|image: anantha3267/django:${IMAGE_TAG}|g" django/deploy.yaml
+                        git add django/deploy.yaml
+                        git commit -m 'Updated the deploy yaml | Jenkins Pipeline'
+                        git push https://${gittoken}@github.com/anantha3267/k8s-cicd-yaml.git HEAD:main
+                        '''
+                    }
+                }
+            }
+        }
+    }
+    
+
+}
