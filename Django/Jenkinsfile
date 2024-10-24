@@ -44,7 +44,7 @@ pipeline {
                         echo 'Updating K8S manifest'
                         # Update the K8S manifest in the django directory
                         sed -i "s|image: anantha3267/django:.*|image: anantha3267/django:${IMAGE_TAG}|g" Django/deploy.yaml
-                        git add django/deploy.yaml
+                        git add Django/deploy.yaml
                         git commit -m 'Updated the deploy yaml | Jenkins Pipeline'
                         git push https://${gittoken}@github.com/anantha3267/k8s-cicd-yaml.git HEAD:main
                         '''
