@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         IMAGE_TAG = "${BUILD_NUMBER}"
-        DOCKER_IMAGE = "anantha3267/todoapp:${IMAGE_TAG}"
+        DOCKER_IMAGE = "anantha3267/django:${IMAGE_TAG}"
     }
 
     stages {
@@ -30,7 +30,7 @@ pipeline {
         }
         stage('Checkout K8S Manifest') {
             steps {
-                git branch: 'main', url: 'https://github.com/nikhil95malempati/k8s-cicd-yaml.git'
+                git branch: 'main', url: 'https://github.com/anantha3267/k8s-cicd-yaml.git'
             }
         }
 
