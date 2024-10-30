@@ -33,6 +33,17 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/anantha3267/k8s-cicd-yaml.git'
             }
         }
+        
+        stage('Code Quality Check'){
+            steps{
+                script{
+                    def result = sh(script: 'python3 Django/Code_Quality.py Django/deploy.yaml', returnStatus: true)
+                    if (result!=0){
+                        error("Code Quality check failed. Too many  empty or comment lines. See script output for details.")
+                    }
+                }
+            }
+        }
 
         stage('Update K8S manifest & push to Repo') {
             steps {
