@@ -38,7 +38,7 @@ pipeline {
         stage('Code Quality Check'){
             steps{
                 script{
-                    def result = sh(script: 'python Code_Quality.py FlaskApp/deloy.yaml, returnStatus: true')
+                    def result = sh(script: 'python FlaskApp/Code_Quality.py FlaskApp/deploy.yaml, returnStatus: true')
                     if (result!=0){
                         error("Code Quality check failed. Too many  empty or comment lines. See script output for details.")
                     }
