@@ -39,7 +39,7 @@ pipeline {
             steps{
                 script{
                     sh 'python --version'  // Use 'python3 --version' if Python 3 is installed as 'python3'
-                    def result = sh(script: 'python3 FlaskApp/Code_Quality.py FlaskApp/deploy.yaml, returnStatus: true')
+                    def result = sh(script: 'python3 FlaskApp/Code_Quality.py FlaskApp/deploy.yaml', returnStatus: true)
                     if (result!=0){
                         error("Code Quality check failed. Too many  empty or comment lines. See script output for details.")
                     }
