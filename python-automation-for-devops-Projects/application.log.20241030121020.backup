@@ -1,0 +1,16 @@
+2024-10-30T10:15:23Z INFO [pod-name] Successfully pulled image "nginx:latest"
+2024-10-30T10:15:24Z ERROR [pod-name] Failed to start container "nginx": CrashLoopBackOff
+2024-10-30T10:15:25Z WARN [kubelet] Node "node-1" is under disk pressure
+2024-10-30T10:15:26Z INFO [scheduler] Successfully scheduled pod "web-app" to "node-1"
+2024-10-30T10:15:27Z ERROR [pod-name] Container "web-server" in pod "web-app" terminated with exit code 1
+2024-10-30T10:15:28Z INFO [controller-manager] Scaled deployment "frontend" from 2 to 3 replicas
+2024-10-30T10:15:29Z WARN [kube-proxy] Skipping service "backend-service" due to invalid configuration
+2024-10-30T10:15:30Z INFO [pod-name] Successfully started container "sidecar-proxy"
+2024-10-30T10:15:31Z ERROR [node-1] Failed to create pod sandbox: NetworkPlugin cni failed
+2024-10-30T10:15:32Z INFO [scheduler] Successfully scheduled pod "database" to "node-2"
+2024-10-30T10:15:33Z INFO [pod-name] Readiness probe succeeded for container "web-server"
+2024-10-30T10:15:34Z WARN [controller] Detected outdated node labels in "node-1"
+2024-10-30T10:15:35Z ERROR [kubelet] Image pull failed: "busybox:1.28" not found
+2024-10-30T10:15:36Z INFO [controller-manager] Started replication controller for "cache"
+2024-10-30T10:15:37Z WARN [controller] Pod "batch-job" exceeded memory limits
+2024-10-30T10:15:38Z INFO [pod-name] Container "worker" completed successfully
