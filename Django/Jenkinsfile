@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout App Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/anantha3267/Python.git'
+                git branch: 'main', url: 'https://github.com/anantha3267/Projects.git'
             }
         }
         
