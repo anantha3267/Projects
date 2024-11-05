@@ -12,7 +12,7 @@ cd /home/ubuntu/gitclone
 
 git clone https://github.com/anantha3267/Projects.git
 
-cp -r Terraform_Projects/terraform-deploy-python-app/* /home/ubuntu/pythonapp
+cp -r /home/ubuntu/gitclone/Projects/Terraform/Terraform_Projects/terraform-deploy-python-app/* /home/ubuntu/pythonapp
 
 cd /home/ubuntu/pythonapp
 
