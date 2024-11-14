@@ -1,0 +1,51 @@
+# AWS Secrets Manager secret to store RDS credentials
+resource "aws_secretsmanager_secret" "rds_secret" {
+  name        = "my-rds-secret"
+  description = "RDS Credentials for MySQL DB"
+
+  tags = {
+    "Environment" = "Production"
+  }
+}
+
+# AWS Secrets Manager version to store the actual secret values
+resource "aws_secretsmanager_secret_version" "rds_secret_version" {
+  secret_id     = aws_secretsmanager_secret.rds_secret.id
+  secret_string = jsonencode({
+    username = "myusername"
+    password = "mypassword"
+  })
+}
+
+# AWS RDS DB instance that uses the credentials stored in Secrets Manager
+resource "aws_db_instance" "my_db_instance" {
+  identifier        = "mydbinstance"
+  engine            = "mysql"
+  instance_class    = "db.t3.micro"
+  allocated_storage = 20
+  db_name           = "mydatabase"
+  multi_az          = false
+  publicly_accessible = true
+
+  # Extract username and password from the Secrets Manager secret
+  username          = jsondecode(aws_secretsmanager_secret_version.rds_secret_version.secret_string)["username"]
+  password          = jsondecode(aws_secretsmanager_secret_version.rds_secret_version.secret_string)["password"]
+
+  # Optionally, configure backup, maintenance, etc.
+  backup_retention_period = 7
+
+  tags = {
+    "Environment" = "Production"
+  }
+}
+
+# Output to display extracted credentials (sensitive handling)
+output "db_username" {
+  value     = jsondecode(aws_secretsmanager_secret_version.rds_secret_version.secret_string)["username"]
+  sensitive = true
+}
+
+output "db_password" {
+  value     = jsondecode(aws_secretsmanager_secret_version.rds_secret_version.secret_string)["password"]
+  sensitive = true
+}
