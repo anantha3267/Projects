@@ -26,6 +26,7 @@ pipeline {
                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_creds']]){
                             dir('Terraform/Terraform_Projects/TF_Jenkins_EC2') {
                             sh 'echo "=================Terraform Init=================="'
+                            sh 'terraform --version'
                             sh 'terraform init'
                         }
                     }
