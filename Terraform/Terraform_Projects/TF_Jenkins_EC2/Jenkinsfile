@@ -15,7 +15,7 @@ pipeline {
 
                 // Clone the Git repository
                 git branch: 'main',
-                    url: 'https://github.com/anantha3267/devops-project-1.git'
+                    url: 'https://github.com/anantha3267/Projects.git'
 
                 sh "ls -lart"
             }
@@ -23,8 +23,8 @@ pipeline {
 
         stage('Terraform Init') {
                     steps {
-                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-rwagh']]){
-                            dir('infra') {
+                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_creds']]){
+                            dir('Terraform/Terraform_Projects/TF_Jenkins_EC2') {
                             sh 'echo "=================Terraform Init=================="'
                             sh 'terraform init'
                         }
@@ -36,8 +36,8 @@ pipeline {
             steps {
                 script {
                     if (params.PLAN_TERRAFORM) {
-                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-rwagh']]){
-                            dir('infra') {
+                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_creds']]){
+                            dir('Terraform/Terraform_Projects/TF_Jenkins_EC2') {
                                 sh 'echo "=================Terraform Plan=================="'
                                 sh 'terraform plan'
                             }
@@ -51,8 +51,8 @@ pipeline {
             steps {
                 script {
                     if (params.APPLY_TERRAFORM) {
-                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-rwagh']]){
-                            dir('infra') {
+                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_creds']]){
+                            dir('Terraform/Terraform_Projects/TF_Jenkins_EC2') {
                                 sh 'echo "=================Terraform Apply=================="'
                                 sh 'terraform apply -auto-approve'
                             }
@@ -66,8 +66,8 @@ pipeline {
             steps {
                 script {
                     if (params.DESTROY_TERRAFORM) {
-                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-rwagh']]){
-                            dir('infra') {
+                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_creds']]){
+                            dir('Terraform/Terraform_Projects/TF_Jenkins_EC2') {
                                 sh 'echo "=================Terraform Destroy=================="'
                                 sh 'terraform destroy -auto-approve'
                             }
