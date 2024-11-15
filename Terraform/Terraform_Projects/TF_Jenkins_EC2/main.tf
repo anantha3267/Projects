@@ -7,6 +7,7 @@ resource "aws_instance" "example" {
   instance_type = "t2.micro"  # Replace with your desired EC2 instance type
 
   tags = {
-    Name = "ExampleInstance"
+    Name = "EC2_Jenkins"
   }
 }
+
