@@ -1,0 +1,154 @@
+# ALB vs NLB: A Comprehensive Guide with Examples
+
+This README explains the key differences between **Network Load Balancer (NLB)** and **Application Load Balancer (ALB)**, including specific examples using **Apache** web servers on EC2 instances. We will cover the following scenarios:
+
+1. **NLB with one EC2 instance**: Serving two different paths `/foo` and `/bar` from a single EC2 instance using Apache.
+2. **ALB with two EC2 instances**: Serving `/foo` from one EC2 instance and `/bar` from another, with path-based routing configured in the ALB.
+
+## Prerequisites
+
+- AWS Account
+- Two EC2 instances (for ALB setup) and one EC2 instance (for NLB setup)
+- Apache installed on each EC2 instance
+- AWS CLI and permissions to configure EC2, NLB, and ALB
+
+---
+
+## Setup Using **Network Load Balancer (NLB)**
+
+In this scenario, we will use **one EC2 instance** to serve two different paths, `/foo` and `/bar`. NLB will route traffic to this single EC2 instance, and the web server (Apache) on the instance will handle path-based routing.
+
+### 1. **Create EC2 Instance**
+
+- **EC2 Instance 1** (to handle both `/foo` and `/bar`):
+  - Install Apache: 
+    ```bash
+    sudo apt update
+    sudo apt install apache2
+    ```
+  - Create `index.html` files for `/foo` and `/bar` paths:
+    ```bash
+    sudo mkdir /var/www/html/foo
+    echo "Hello from /foo!" | sudo tee /var/www/html/foo/index.html
+
+    sudo mkdir /var/www/html/bar
+    echo "Hello from /bar!" | sudo tee /var/www/html/bar/index.html
+    ```
+
+### 2. **Create Network Load Balancer (NLB)**
+
+- **Create NLB**:
+  - In the AWS Console, navigate to **EC2 > Load Balancers** and create a **Network Load Balancer (NLB)**.
+  - Attach the NLB to your VPC and subnets.
+
+- **Configure NLB Listener**:
+  - Set up a **TCP listener** (port 80) on the NLB.
+  - The NLB will forward traffic to EC2 Instance 1, but it does **not inspect the HTTP path**.
+
+### 3. **Configure Apache for Path-Based Routing**
+
+Since NLB doesn't inspect HTTP paths, we need Apache to handle the path routing for `/foo` and `/bar`.
+
+- Configure Apache to serve `/foo` and `/bar` paths:
+  - Edit Apache's configuration to allow the routing:
+    - In `/etc/apache2/sites-available/000-default.conf`, make sure the Apache configuration supports both paths.
+    - Add `Alias` directives for `/foo` and `/bar`:
+      ```apache
+      Alias /foo /var/www/html/foo
+      Alias /bar /var/www/html/bar
+      ```
+
+- Restart Apache:
+  ```bash
+  sudo systemctl restart apache2
+4. Test NLB
+The NLB forwards traffic to EC2 Instance 1.
+To test path-based routing:
+http://<NLB-DNS>/foo — Routed to EC2 Instance 1, serving /foo/index.html.
+http://<NLB-DNS>/bar — Routed to EC2 Instance 1, serving /bar/index.html.
+Note: NLB does not handle path-based routing—it forwards traffic to EC2 instances. Path-based routing is handled by Apache.
+
+Setup Using Application Load Balancer (ALB)
+In this scenario, we will use two EC2 instances:
+
+EC2 Instance 1 will serve /foo.
+EC2 Instance 2 will serve /bar.
+The ALB will handle the path-based routing to these two EC2 instances.
+
+1. Create EC2 Instances
+EC2 Instance 1 (Serving /foo):
+
+Install Apache:
+bash
+Copy code
+sudo apt update
+sudo apt install apache2
+Create /var/www/html/foo/index.html:
+bash
+Copy code
+sudo mkdir /var/www/html/foo
+echo "Hello from /foo!" | sudo tee /var/www/html/foo/index.html
+EC2 Instance 2 (Serving /bar):
+
+Install Apache:
+bash
+Copy code
+sudo apt update
+sudo apt install apache2
+Create /var/www/html/bar/index.html:
+bash
+Copy code
+sudo mkdir /var/www/html/bar
+echo "Hello from /bar!" | sudo tee /var/www/html/bar/index.html
+2. Create Application Load Balancer (ALB)
+Create ALB:
+In the AWS Console, navigate to EC2 > Load Balancers and create an Application Load Balancer (ALB).
+Attach the ALB to your VPC and subnets.
+Choose HTTP or HTTPS as the protocol for the listener.
+3. Create Target Groups for Each EC2 Instance
+Target Group for /foo:
+
+Create a target group (e.g., foo-target-group), set it to HTTP, and register EC2 Instance 1 (which serves /foo).
+Target Group for /bar:
+
+Create another target group (e.g., bar-target-group), set it to HTTP, and register EC2 Instance 2 (which serves /bar).
+4. Configure ALB Listener Rules for Path-Based Routing
+Configure Listener Rules:
+In the ALB configuration, create listener rules to route traffic based on the path:
+Path /foo* should route to Target Group for /foo (EC2 Instance 1).
+Path /bar* should route to Target Group for /bar (EC2 Instance 2).
+5. Test ALB Path-Based Routing
+The ALB will route traffic based on the URL path:
+http://<ALB-DNS>/foo → ALB routes to EC2 Instance 1, which serves /foo/index.html.
+http://<ALB-DNS>/bar → ALB routes to EC2 Instance 2, which serves /bar/index.html.
+Note: ALB handles path-based routing at the load balancer level, so the backend EC2 instances do not need to manage paths themselves.
+
+Key Differences: NLB vs ALB
+Feature	Network Load Balancer (NLB)	Application Load Balancer (ALB)
+Layer	Layer 4 (TCP/UDP)	Layer 7 (HTTP/HTTPS)
+Path-Based Routing	Not supported — EC2 handles path-based routing.	Supported — ALB inspects HTTP requests and routes traffic based on path.
+Routing Type	Routes traffic based on IP and port.	Routes traffic based on path or host.
+Ideal Use Case	High-performance, low-latency, TCP/UDP traffic.	Web applications, APIs, services needing HTTP-based routing.
+Configuration Complexity	Simpler to set up but requires Apache (or similar) to handle path routing.	More advanced, as ALB directly handles path-based routing without needing extra web server configuration.
+Testing NLB and ALB
+Test NLB Setup
+To test the Network Load Balancer (NLB):
+
+Obtain the NLB DNS name from the AWS console.
+Test the path routing by navigating to:
+http://<NLB-DNS>/foo → Should display "Hello from /foo!"
+http://<NLB-DNS>/bar → Should display "Hello from /bar!"
+The NLB forwards requests to EC2 Instance 1. Apache handles the path-based routing for /foo and /bar.
+
+Test ALB Setup
+To test the Application Load Balancer (ALB):
+
+Obtain the ALB DNS name from the AWS console.
+Test the path-based routing by navigating to:
+http://<ALB-DNS>/foo → Should route to EC2 Instance 1 and display "Hello from /foo!"
+http://<ALB-DNS>/bar → Should route to EC2 Instance 2 and display "Hello from /bar!"
+The ALB will route traffic based on the path (/foo and /bar) directly to the correct EC2 instances.
+
+Conclusion
+NLB is ideal for high-performance, low-latency, TCP/UDP traffic, and it works at the transport layer. Path-based routing is handled at the web server level (Apache).
+ALB operates at the application layer and provides path-based routing natively, making it easier to handle web traffic that requires routing based on URL paths.
