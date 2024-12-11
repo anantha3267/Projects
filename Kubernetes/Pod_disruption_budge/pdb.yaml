@@ -1,0 +1,50 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: my-app-pdb
+spec:
+  minAvailable: 50%
+  selector:
+    matchLabels:
+      app: my-app
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: my-app-pdb
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: my-app
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: my-statefulset-pdb
+spec:
+  minAvailable: 3
+  selector:
+    matchLabels:
+      app: my-statefulset
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: my-large-app-pdb
+spec:
+  minAvailable: 75%
+  selector:
+    matchLabels:
+      app: my-large-app
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: my-deployment-pdb
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: my-deployment
