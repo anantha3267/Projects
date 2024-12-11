@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: host-based-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true" # Force redirect to HTTPS
+spec:
+  tls:
+    - hosts:
+        - example.com # The domain for this Ingress rule
+      secretName: tls-secret # Name of the TLS secret containing the certificate and key
+  rules:
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: example-service # Name of the service you want to route traffic to
+                port:
+                  number: 80

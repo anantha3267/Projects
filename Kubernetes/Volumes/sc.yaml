@@ -1,0 +1,6 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: hostpath-storage # Name of the StorageClass
+provisioner: kubernetes.io/aws-ebs # Use 'no-provisioner' for static volumes
+volumeBindingMode: WaitForFirstConsumer # PVC will bind when the pod is scheduled

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app.kubernetes.io/name: MyApp
+spec:
+  containers:
+    - name: myapp-container
+      image: busybox:1.28
+      env:
+        - name: FIRSTNAME
+          value: "Anantha"
+      command: ["sh", "-c", "echo The app is running! && sleep 3600"]
+    - name: sidecar-container
+      image: busybox:1.28
+      command:
+        [
+          "sh",
+          "-c",
+          "while true; do echo Sidecar container is logging; sleep 60; done",
+        ]
+  initContainers:
+    - name: init-myservice
+      image: busybox:1.28
+      command: ["sh", "-c"]
+      args:
+        [
+          "until nslookup myservice.default.svc.cluster.local; do echo waiting for myservice; sleep 2; done",
+        ]

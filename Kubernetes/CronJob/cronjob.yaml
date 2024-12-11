@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scale-deployment
+spec:
+  schedule: "0 9 * * *" # Scale up at 9 AM every day
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: scale-container
+              image: bitnami/kubectl # kubectl is needed to scale the deployment
+              command:
+                - "/bin/sh"
+                - "-c"
+                - |
+                  kubectl scale --replicas=5 deployment/my-app --namespace=my-namespace
+          restartPolicy: OnFailure

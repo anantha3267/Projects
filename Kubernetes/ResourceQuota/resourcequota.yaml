@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: example-quota
+  namespace: my-namespace
+spec:
+  hard:
+    pods: "10" # Maximum 10 pods
+    requests.cpu: "2" # Total CPU requested must not exceed 2 cores
+    requests.memory: "4Gi" # Total memory requested must not exceed 4Gi
+    limits.cpu: "4" # Total CPU limits must not exceed 4 cores
+    limits.memory: "8Gi" # Total memory limits must not exceed 8Gi
