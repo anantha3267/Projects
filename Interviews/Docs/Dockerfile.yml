@@ -1,0 +1,18 @@
+Dockerfile
+FROM python:xx
+COPY json_send_s3.py /app
+RUN pip install -r requirements.txt
+WORKDIR /app
+CMD ["python", "json_send_s3"]
+
+apiVersion: batch/v1beta1
+kind: CronJob
+spec:
+    schedule: "0 5 * * *"
+    jobTemplate:
+        spec:
+            template:
+                spec:
+                  containers:
+                  - name: mypythonimage
+                    image: https://dkt.ecr.io/myimages/json-send0-s3image:v1
