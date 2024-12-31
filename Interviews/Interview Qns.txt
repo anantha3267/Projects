@@ -1,5 +1,3 @@
-ScoreMe Solutions - Gurugram
-
 Dora metrics
 how to reducwe docker image size
 How do u create aws db for high performance and give to app teams
