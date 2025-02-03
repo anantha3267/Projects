@@ -9,10 +9,11 @@ pipeline{
         MERN_NGINX_DIR = 'MERN_Nginx'
     }
     stages{
-        stage('checkout')
+        stage('checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/anantha3267/Projects.git'
             }
+        }
 
         stage('Install Dependencies') {
             steps {
