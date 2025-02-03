@@ -1,5 +1,10 @@
 pipeline{
-    agent any
+    agent {
+        docker {
+            image 'node:18'  // Using a Node.js Docker image with npm pre-installed
+            args '--user root' // Ensures required permissions
+        }
+    }
 
     environment{
         EC2_USER = "ec2-user"
@@ -8,9 +13,7 @@ pipeline{
         APP_DIR = '/home/ec2-user'  // Directory where your app will reside on EC2
         MERN_NGINX_DIR = 'MERN_Nginx'
     }
-    tools {
-        nodejs 'NodeJS 16'  // This uses the version configured in Global Tool Configuration
-    }
+
     stages{
         stage('checkout') {
             steps {
