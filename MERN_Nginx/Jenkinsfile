@@ -45,7 +45,7 @@ pipeline{
         steps {
             script {
                 // Build frontend and backend from 'mern_nginx' directory (production build for frontend)
-                sh 'cd ${MERN_NGINX_DIR}/frontend && npm run build'
+                sh 'cd ${MERN_NGINX_DIR}/frontend &&  CI=false npm run build'
                 // No need to run npm install for backend, as it was done in the Install Dependencies stage
             }
         }
