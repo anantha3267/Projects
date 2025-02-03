@@ -10,9 +10,9 @@ pipeline{
     }
     stages{
         stage('checkout')
-        steps {
+            steps {
                 git branch: 'main', url: 'https://github.com/anantha3267/Projects.git'
-        }
+            }
 
         stage('Install Dependencies') {
             steps {
