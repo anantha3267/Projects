@@ -3,7 +3,7 @@ pipeline{
 
     environment{
         EC2_USER = "ec2-user"
-        EC2_HOST = 'your-ec2-public-ip'
+        EC2_HOST = '107.22.138.225'
         EC2_SSH_KEY = credentials('pem')  // The SSH private key for the EC2 instance
         APP_DIR = '/home/ec2-user'  // Directory where your app will reside on EC2
         MERN_NGINX_DIR = 'MERN_Nginx'
