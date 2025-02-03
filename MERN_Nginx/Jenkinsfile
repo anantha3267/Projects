@@ -1,7 +1,7 @@
 pipeline{
     agent {
         docker {
-            image 'node:18'  // Using a Node.js Docker image with npm pre-installed
+            image 'node:20'  // Using a Node.js Docker image with npm pre-installed
             args '--user root' // Ensures required permissions
         }
     }
