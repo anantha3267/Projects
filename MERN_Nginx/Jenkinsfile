@@ -8,6 +8,9 @@ pipeline{
         APP_DIR = '/home/ec2-user'  // Directory where your app will reside on EC2
         MERN_NGINX_DIR = 'MERN_Nginx'
     }
+    tools {
+        nodejs 'NodeJS 16'  // This uses the version configured in Global Tool Configuration
+    }
     stages{
         stage('checkout') {
             steps {
