@@ -1,0 +1,23 @@
+# Use the official Node.js image.
+FROM node:18
+
+# Set the working directory inside the container.
+WORKDIR /app
+
+# Copy package.json and package-lock.json to the working directory.
+COPY frontend/package*.json ./frontend/
+
+# Install dependencies.
+RUN cd frontend && npm install
+
+# Copy frontend code.
+COPY frontend ./frontend
+
+# Expose frontend port.
+EXPOSE 3000
+
+# Set environment variable to listen on all network interfaces
+# ENV HOST=0.0.0.0
+
+# Start the frontend application.
+CMD ["npm", "start", "--prefix", "frontend"]
