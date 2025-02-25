@@ -1,0 +1,4 @@
+- Create a snapshot from volume. From the volume create a new volume and attach it to other EC2 which is in same region
+- lsblk
+- sudo mkdir /mnt/my-volume
+- sudo mount /dev/xvdf1 /mnt/my-volume

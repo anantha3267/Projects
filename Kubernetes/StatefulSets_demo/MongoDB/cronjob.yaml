@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mongodb-backup
+spec:
+  schedule: "0 3 * * *" # This will run every day at 3 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: mongodb-backup
+              image: mongo:latest # MongoDB official image with the mongodump tool
+              env:
+                - name: MONGO_INITDB_ROOT_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: mongodb-secret # Secret containing MongoDB username
+                      key: username
+                - name: MONGO_INITDB_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: mongodb-secret # Secret containing MongoDB password
+                      key: password
+              command:
+                - "sh"
+                - "-c"
+                - |
+                  # Perform the MongoDB backup using mongodump
+                  mongodump --uri="mongodb://$MONGO_INITDB_ROOT_USERNAME:$MONGO_INITDB_ROOT_PASSWORD@mongodb-service:27017" --out=/backups/mongo-backup-$(date +\%F)
+              volumeMounts:
+                - mountPath: /backups
+                  name: backup-volume
+          restartPolicy: OnFailure
+          volumes:
+            - name: backup-volume
+              persistentVolumeClaim:
+                claimName: mongodb-backup-pvc # PVC for storing backups
