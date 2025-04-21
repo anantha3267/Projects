@@ -1,0 +1,117 @@
+# 1. Custom Resource Definition (CRD)
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: stalepvcs.cleanup.example.com
+spec:
+  group: cleanup.example.com
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                pvcName:
+                  type: string
+                namespace:
+                  type: string
+                maxAgeDays:
+                  type: integer
+  scope: Namespaced
+  names:
+    plural: stalepvcs
+    singular: stalepvc
+    kind: StalePVC
+    shortNames:
+      - spvc
+---
+# 2. Service Account for the controller
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pvc-cleaner
+---
+# 3. ClusterRole (permissions for the controller)
+# 3. ClusterRole (permissions for the controller)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pvc-cleaner-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "persistentvolumeclaims"]
+    verbs: ["get", "list", "delete"]
+  - apiGroups: ["cleanup.example.com"]
+    resources: ["stalepvcs"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["list", "get", "watch"] # Added permission to list CRDs
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"] # Added permission to create events
+
+---
+# 4. ClusterRoleBinding to bind the ServiceAccount to the ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: pvc-cleaner-binding
+roleRef:
+  kind: ClusterRole
+  name: pvc-cleaner-role
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: pvc-cleaner
+    namespace: default
+
+---
+# 5. Deployment of the controller
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pvc-cleaner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pvc-cleaner
+  template:
+    metadata:
+      labels:
+        app: pvc-cleaner
+    spec:
+      serviceAccountName: pvc-cleaner
+      containers:
+        - name: pvc-cleaner
+          image: anantha3267/stalepvc-controller:latest
+---
+# 6. PVC that the controller will monitor
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-logs-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# 7. StalePVC Custom Resource to trigger controller logic
+apiVersion: cleanup.example.com/v1
+kind: StalePVC
+metadata:
+  name: my-stale-pvc
+  namespace: default
+spec:
+  pvcName: my-logs-pvc
+  namespace: default
+  maxAgeDays: 1

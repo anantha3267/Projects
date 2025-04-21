@@ -11,3 +11,10 @@ service:
   port: 80 # This line defines the port
 
 resources: {}
+demo-subchart:
+  customValue: "hello from nginx"
+global:
+  defaultStorageClass: "my-custom-storageclass-nick"
+
+postgresql:
+  enabled: true

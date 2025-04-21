@@ -1,5 +1,16 @@
 apiVersion: v2
 name: nginx
-description: Nginx - updated
-version: 0.1.1
+description: Nginx - dependencies added
+version: 0.1.2
 appVersion: "1.21.0"
+
+dependencies:
+  - name: redis
+    version: "17.3.2"
+    repository: "https://charts.bitnami.com/bitnami"
+  - name: demo-subchart
+    version: "0.1.0"
+  - name: postgresql
+    version: 16.2.2
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled

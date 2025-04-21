@@ -1,0 +1,104 @@
+stages:
+  - build_stage
+  - deploy_stage
+
+build:
+  stage: build_stage
+  image: node
+  script:
+    - npm install
+  artifacts:
+    paths:
+      - node_modules/
+      - package-lock.json
+
+deploy:
+  stage: deploy_stage
+  image: node
+  dependencies:
+    - build   #without this this job downloads all artifacts from prev stages. th this it only downloads from build
+  script:
+    - node app.js > /dev/null 2>&1 &
+
+---
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            agent {
+                docker 'node'  // Use Node.js docker image
+            }
+            steps {
+                script {
+                    // Run npm install to install dependencies
+                    sh 'npm install'
+                }
+            }
+            post {
+                success {
+                    // Archive node_modules and package-lock.json as artifacts
+                    archiveArtifacts artifacts: 'node_modules/**/*, package-lock.json', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Deploy') {
+            agent {
+                docker 'node'  // Use Node.js docker image
+            }
+            steps {
+                script {
+                    // Download the artifacts from the previous stage
+                    // Jenkins will automatically use the archived artifacts
+                    sh 'node app.js > /dev/null 2>&1 &'
+                }
+            }
+        }
+    }
+}
+---
+name: Node.js Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: node:latest  # Use Node.js docker image
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Upload node_modules and package-lock.json as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts
+        path: |
+          node_modules/
+          package-lock.json
+
+  deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: node:latest  # Use Node.js docker image
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: build-artifacts
+
+    - name: Run app
+      run: node app.js > /dev/null 2>&1 &

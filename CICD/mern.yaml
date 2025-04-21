@@ -1,0 +1,112 @@
+pipeline{
+    agent {
+        docker {
+            image 'node:20'  // Using a Node.js Docker image with npm pre-installed
+            args '--user root' // Ensures required permissions
+        }
+    }
+
+    environment{
+        EC2_USER = "ec2-user"
+        EC2_HOST = '107.22.138.225'
+        EC2_SSH_KEY = credentials('pem')  // The SSH private key for the EC2 instance
+        APP_DIR = '/home/ec2-user'  // Directory where your app will reside on EC2
+        MERN_NGINX_DIR = 'MERN_Nginx'
+    }
+
+    stages{
+        stage('checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/anantha3267/Projects.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    // Install frontend and backend dependencies from the 'mern_nginx' directory
+                    sh 'cd ${MERN_NGINX_DIR}/frontend && npm install'
+                    sh 'cd ${MERN_NGINX_DIR} && npm install'
+                }
+            }
+        }
+
+        // stage('Run Tests') {
+        //     steps {
+        //         script {
+        //             // Run tests for frontend and backend inside 'mern_nginx' directory
+        //             sh 'cd ${MERN_NGINX_DIR}/frontend && npm test'
+        //             sh 'cd ${MERN_NGINX_DIR}/backend && npm test'
+        //         }
+        //     }
+        // }
+
+    stage('Build') {
+        steps {
+            script {
+                // Build frontend and backend from 'mern_nginx' directory (production build for frontend)
+                sh 'cd ${MERN_NGINX_DIR}/frontend &&  CI=false npm run build'
+                // No need to run npm install for backend, as it was done in the Install Dependencies stage
+            }
+        }
+    }
+
+    stage('Deploy to EC2') {
+        steps {
+            script {
+                // Rsync to upload frontend and backend to EC2 instance
+                    sh '''
+                        rsync -avz -e "ssh -i ${EC2_SSH_KEY}" ${MERN_NGINX_DIR}/frontend/ ${EC2_USER}@${EC2_HOST}:${APP_DIR}/frontend
+                        rsync -avz -e "ssh -i ${EC2_SSH_KEY}" ${MERN_NGINX_DIR}/backend/ ${EC2_USER}@${EC2_HOST}:${APP_DIR}/backend
+                    '''
+                }
+            }
+        }
+
+
+}
+}
+    
+-----
+image: node:20
+
+variables:
+  EC2_USER: "ec2-user"
+  EC2_HOST: "107.22.138.225"
+  APP_DIR: "/home/ec2-user"
+  MERN_NGINX_DIR: "MERN_Nginx"
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - install
+  - build
+  - deploy
+
+before_script:
+  # Install rsync and SSH client
+  - apt-get update && apt-get install -y openssh-client rsync
+
+install_dependencies:
+  stage: install
+  script:
+    - cd $MERN_NGINX_DIR/frontend && npm install
+    - cd ../ && npm install
+
+build:
+  stage: build
+  script:
+    - cd $MERN_NGINX_DIR/frontend && CI=false npm run build
+
+deploy_to_ec2:
+  stage: deploy
+  only:
+    - main
+  script:
+    - mkdir -p ~/.ssh
+    - echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan $EC2_HOST >> ~/.ssh/known_hosts
+    - rsync -avz -e "ssh -i ~/.ssh/id_rsa" $MERN_NGINX_DIR/frontend/ $EC2_USER@$EC2_HOST:$APP_DIR/frontend
+    - rsync -avz -e "ssh -i ~/.ssh/id_rsa" $MERN_NGINX_DIR/backend/ $EC2_USER@$EC2_HOST:$APP_DIR/backend
+
+# Define the secret key as a protected variable in GitLab

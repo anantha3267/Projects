@@ -1,0 +1,187 @@
+stages:
+  - checkout
+  - build_and_push
+  - quality_check
+  - update_manifest
+
+variables:
+  IMAGE_TAG: "$CI_PIPELINE_ID"
+  DOCKER_IMAGE: "anantha3267/django:${IMAGE_TAG}"
+
+# Docker-enabled runner for Docker stages
+docker_runner: docker-agent
+
+# Python-enabled runner for Python stages
+python_runner: python-agent
+
+checkout_app_code:
+  stage: checkout
+  script:
+    - git clone --branch main https://github.com/anantha3267/Projects.git
+  tags:
+    - ${docker_runner}  # Use docker runner for this stage as well, in case you want to run everything in the same environment
+
+build_and_push_docker:
+  stage: build_and_push
+  script:
+    - echo 'Building and pushing Docker image'
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - cd Projects/Django
+    - docker build -t ${DOCKER_IMAGE} .
+    - docker push ${DOCKER_IMAGE}
+  tags:
+    - ${docker_runner}  # Docker runner for Docker build
+
+checkout_k8s_manifest:
+  stage: checkout
+  script:
+    - git clone --branch main https://github.com/anantha3267/k8s-cicd-yaml.git
+  tags:
+    - ${docker_runner}
+
+code_quality_check:
+  stage: quality_check
+  script:
+    - python3 Projects/Django/Code_Quality.py Projects/Django/deploy.yaml
+  tags:
+    - ${python_runner}  # Python runner for code quality check
+
+update_k8s_manifest:
+  stage: update_manifest
+  script:
+    - git config --global user.email "you@example.com"
+    - git config --global user.name "Your Name"
+    - sed -i "s|image: anantha3267/django:.*|image: anantha3267/django:${IMAGE_TAG}|g" Projects/Django/deploy.yaml
+    - git add Projects/Django/deploy.yaml
+    - git commit -m "Updated the deploy yaml | GitLab CI"
+    - git push https://$GITLAB_TOKEN@github.com/anantha3267/k8s-cicd-yaml.git HEAD:main
+  tags:
+    - ${docker_runner}  # Docker runner for updating K8S manifest
+
+---
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_TAG: ${{ github.run_id }}
+  DOCKER_IMAGE: "anantha3267/django:${IMAGE_TAG}"
+
+jobs:
+  checkout_app_code:
+    runs-on: ubuntu-latest  # Using Docker-enabled runner for this job
+    steps:
+      - name: Checkout App Code
+        uses: actions/checkout@v2
+        with:
+          ref: main
+          repository: anantha3267/Projects
+
+  build_and_push_docker:
+    runs-on: ubuntu-latest  # Docker-enabled runner for the Docker build
+    steps:
+      - name: Build and Push Docker Image
+        run: |
+          echo 'Building and pushing Docker image'
+          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+          cd Projects/Django
+          docker build -t ${DOCKER_IMAGE} .
+          docker push ${DOCKER_IMAGE}
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+  checkout_k8s_manifest:
+    runs-on: ubuntu-latest  # Docker-enabled runner for this stage
+    steps:
+      - name: Checkout K8S Manifest Repo
+        uses: actions/checkout@v2
+        with:
+          ref: main
+          repository: anantha3267/k8s-cicd-yaml
+
+  code_quality_check:
+    runs-on: python-3.8  # Python-enabled runner for code quality check
+    steps:
+      - name: Run Code Quality Check
+        run: python3 Projects/Django/Code_Quality.py Projects/Django/deploy.yaml
+
+  update_k8s_manifest:
+    runs-on: ubuntu-latest  # Docker-enabled runner for updating K8S manifest
+    steps:
+      - name: Update K8S Manifest and Push to Repo
+        run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          sed -i "s|image: anantha3267/django:.*|image: anantha3267/django:${IMAGE_TAG}|g" Projects/Django/deploy.yaml
+          git add Projects/Django/deploy.yaml
+          git commit -m "Updated the deploy yaml | GitHub Actions"
+          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/anantha3267/k8s-cicd-yaml.git HEAD:main
+---
+pipeline {
+    agent none  // No global agent, define per-stage
+
+    environment {
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        DOCKER_IMAGE = "anantha3267/django:${IMAGE_TAG}"
+    }
+
+    stages {
+        stage('Checkout App Code') {
+            agent { label 'docker-agent' }  // Use Docker agent for this stage
+            steps {
+                git branch: 'main', url: 'https://github.com/anantha3267/Projects.git'
+            }
+        }
+
+        stage('Build and Push Docker') {
+            agent { label 'docker-agent' }  // Docker agent for Docker build
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'd0a1f0d1-d988-4519-9391-886b74bbb920', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh '''
+                        echo 'Building and pushing Docker image'
+                        docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+                        cd Django
+                        docker build -t ${DOCKER_IMAGE} .
+                        docker push ${DOCKER_IMAGE}
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Checkout K8S Manifest') {
+            agent { label 'docker-agent' }  // Docker agent for checking K8S manifest repo
+            steps {
+                git branch: 'main', url: 'https://github.com/anantha3267/k8s-cicd-yaml.git'
+            }
+        }
+
+        stage('Code Quality Check') {
+            agent { label 'python-agent' }  // Python agent for code quality check
+            steps {
+                script {
+                    def result = sh(script: 'python3 Django/Code_Quality.py Django/deploy.yaml', returnStatus: true)
+                    if (result != 0) {
+                        error("Code Quality check failed. Too many empty or comment lines. See script output for details.")
+                    }
+                }
+            }
+        }
+
+        stage('Update K8S Manifest & Push to Repo') {
+            agent { label 'docker-agent' }  // Docker agent for updating K8S manifest
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'github-pat-token-id', variable: 'gittoken')]) {
+                        sh '''
+                        echo 'Current contents of deploy.yaml:'
+                        cat Django/deploy.yaml
+                        echo 'Updating K8S manifest'
+                        sed -i "s|image: anantha3267/django:.*|image: anantha3267/django:${IMAGE_TAG}|g" Django/deploy.yaml
+                        git add Django/deploy.yaml
+                        git commit -m 'Updated the deploy yaml | Jenkins

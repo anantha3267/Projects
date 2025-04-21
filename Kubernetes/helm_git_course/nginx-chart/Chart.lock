@@ -1,0 +1,12 @@
+dependencies:
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 17.3.2
+- name: demo-subchart
+  repository: ""
+  version: 0.1.0
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 16.2.2
+digest: sha256:9d24afc2c021c1262a508bf1a587f7f4300cb7180251e1594e122de4520cfee4
+generated: "2025-04-08T06:54:53.2430878-04:00"
