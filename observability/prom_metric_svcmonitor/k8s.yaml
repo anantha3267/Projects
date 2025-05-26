@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-metrics-deployment
+  labels:
+    app: flask-metrics-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: flask-metrics-deployment
+  template:
+    metadata:
+      labels:
+        app: flask-metrics-deployment
+    spec:
+      containers:
+        - name: flask-metrics-container
+          image: anantha3267/flas-metrics-app:latest
+          ports:
+            - containerPort: 5000 # Match the actual port your Flask app exposes
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-metrics-service
+  labels:
+    app: flask-metrics
+spec:
+  type: NodePort
+  selector:
+    app: flask-metrics-deployment
+  ports:
+    - name: http # This is important for Prometheus
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+      nodePort: 32080 # Optional; only needed if accessing via NodePort
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: flask-metrics-monitoring
+  labels:
+    ntnx-p8s: flask # needed as prometheus operator has this label in servicemonotrselector
+spec:
+  selector:
+    matchLabels:
+      app: flask-metrics
+  namespaceSelector:
+    matchNames:
+      - default # Make sure this matches your namespace
+  endpoints:
+    - port: http # Must match the name in the Service
+      path: /metrics
+      interval: 30s

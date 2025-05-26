@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	
+	<!-- Give product a unique ID per platform-->
+	<?if $(var.Platform)=x64 ?>
+	<?define ProductCode="{D625FA12-B0C2-4499-AA1E-E185298E697C}"?>
+	<?else?>
+	<?define ProductCode="{F0CC51AF-2E12-4D88-9109-CA17FB3BA664}"?>
+	<?endif?>
+
+	<!-- Fixed Upgrade ID-->
+	<?define UpgradeCode="{5FC1D4C6-F32D-47D4-A1F6-9EB1BCC3EC2C}"?>
+	
+
+
+	<!-- Define Main Product-->
+	<Product Id="$(var.ProductCode)" 
+		Name="!(loc.ProductName_$(var.Platform))" 
+		Language="!(loc.Language)" 
+		Version="$(var.BuildVersion)" 
+		Manufacturer="!(loc.Company)" 
+		UpgradeCode="$(var.UpgradeCode)">
+
+		<!-- Provide Package Details-->
+		<Package 
+			InstallerVersion="200" 
+			Compressed="yes" 
+			InstallScope="perMachine"
+			Platform="$(var.Platform)"
+			Manufacturer="!(loc.Company)"
+			Description="!(loc.Description)"
+			Keywords="!(loc.Keywords)"
+			Comments="!(loc.Comments)"
+			Languages="!(loc.Language)" 
+				 />
+
+		<!-- Downgrade error message-->
+		<MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeErrorMessage)" />
+		<MediaTemplate 
+			EmbedCab="yes"
+			/>
+
+		<!-- Define main app icon-->
+		<Icon Id="icon.ico" SourceFile="$(var.ConsoleApp.ProjectDir)\app.ico"/>
+
+		<!-- use icon.ico for this installer (shows up in Add/Remove programs)-->
+		<Property Id="ARPPRODUCTICON">icon.ico</Property>
+		<!-- Help/Support website (shows up in Add/Remove programs)-->
+		<Property Id="ARPURLINFOABOUT">http://www.angelsix.com</Property>
+
+		<!-- Create a basic UI for this installer-->
+		<UIRef Id="WixUI_Minimal"/>
+
+		<!-- Create  a basic UI background images-->
+		<WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\Assets\License.rtf" />
+		<WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\Assets\Background.bmp"/>
+		<WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\Assets\Banner.bmp"/>
+
+		<!-- Define components, shortcuts, files etc... for installer-->
+		<Feature Id="ProductFeature" Title="ConsoleApp" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+			<ComponentGroupRef Id="PublishedComponents" />
+
+			
+		</Feature>
+	</Product>
+
+
+
+
+</Wix>
